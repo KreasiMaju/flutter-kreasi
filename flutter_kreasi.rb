@@ -3,7 +3,7 @@ class FlutterKreasi < Formula
     homepage "https://kreasimaju.id"
     url "https://kreasimaju.id/brew/flutter_kreasi"
     version "1.0.0"
-    sha256 "fdb27281beb0e5ddea254ae8e9d5d5bce3b5fb710c06c55afe73970552a1011e" # Ganti dengan SHA256 yang benar
+    sha256 "f1a490ddcdb28872222bd33f8446c457520c412fcb5dcbd8275ed1cebdbf37e9" # Ganti dengan SHA256 yang benar
 
     def install
         bin.install "flutter_kreasi" # Pastikan ini merujuk ke file yang benar
