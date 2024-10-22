@@ -71,14 +71,15 @@ jobs:
           git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/KreasiMaju/flutter-kreasi.git
           git push origin main
 
+      # Buat GitHub Release secara otomatis menggunakan versi terbaru
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.0
         with:
-          tag_name: 1.0.2
-          release_name: flutter_kreasi v1.0.2
+          tag_name: ${{ env.VERSION }}
+          release_name: flutter_kreasi v${{ env.VERSION }}
           draft: false
           prerelease: false
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Build Artifact to Release
         run: |
