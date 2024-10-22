@@ -22,7 +22,7 @@ jobs:
         id: current_version
         run: |
           # Mendapatkan versi saat ini dari file formula
-          current_version=$(grep -oP 'version "\K[^\"]+' flutter_kreasi.rb)
+          current_version=$(grep -oP 'version "\K[^\"]+' ../../flutter_kreasi.rb)
           echo "Current version: $current_version"
           echo "::set-output name=version::$current_version"
 
