@@ -298,9 +298,39 @@ class #{presentation_name.capitalize}Page extends StatelessWidget {
   create_file_with_content("#{project_path}/lib/presentation/#{presentation_name.downcase}/service/#{presentation_name.downcase}_service.dart", "class #{presentation_name.capitalize}Service {}")
 end
 
+def print_help
+  help_text = <<-HELP
+Usage:
+  flutter_kreasi [command] [options]
+
+Commands:
+  create [project_name]        Create a new Flutter project with the basic structure.
+  service create [name]        Create a new service in the Flutter project.
+  dependency create [name]     Create a new dependency in the Flutter project.
+  presentation create [name]   Create a new presentation layer in the Flutter project.
+  -v, --version                Display the current version of the script.
+  -h, --help                   Show this help message.
+
+Examples:
+  flutter_kreasi create my_project
+  flutter_kreasi service create my_service
+  flutter_kreasi dependency create my_dependency
+  flutter_kreasi presentation create my_presentation
+  flutter_kreasi -v
+  flutter_kreasi --help
+
+  HELP
+
+  puts help_text
+end
+
+def print_version
+  puts "Version 1.0.1"
+end
+
 # Mengambil argumen dari command line
 if ARGV.empty?
-  puts "Please provide a command."
+  puts "Please provide a command. Use '-h' or '--help' for a list of commands."
   exit
 end
 
@@ -317,8 +347,10 @@ when "dependency"
   create_dependency(name, "./") if sub_command == "create"
 when "presentation"
   create_presentation(name, "./") if sub_command == "create"
-when "version"
-  puts "Version 1.0.1"
+when "-v", "--version"
+  print_version
+when "-h", "--help"
+  print_help
 else
-  puts "Unknown command."
+  puts "Unknown command. Use '-h' or '--help' for a list of commands."
 end
