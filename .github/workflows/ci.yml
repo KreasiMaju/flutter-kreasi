@@ -39,9 +39,15 @@ jobs:
         run: |
           # Mengganti versi di flutter_kreasi.rb
           sed -i "s/version \".*\"/version \"${{ steps.bump_version.outputs.new_version }}\"/" flutter_kreasi.rb
-          
-          # Update SHA256
-          # (update SHA256 sesuai file baru, perlu dikembangkan sesuai kebutuhan, bisa menggunakan curl dan openssl)
+
+          # Update URL download dari GitHub release
+          github_url="https://github.com/KreasiMaju/flutter-kreasi/releases/download/${{ steps.bump_version.outputs.new_version }}/flutter_kreasi"
+          sed -i "s|url \".*\"|url \"$github_url\"|" flutter_kreasi.rb
+
+          # Update SHA256 (opsional jika diinginkan hash valid file)
+          curl -L "$github_url" -o flutter_kreasi_latest
+          sha256=$(sha256sum flutter_kreasi_latest | awk '{ print $1 }')
+          sed -i "s/sha256 \".*\"/sha256 \"$sha256\"/" flutter_kreasi.rb
 
       - name: Update Print Version
         run: |
@@ -53,7 +59,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add flutter_kreasi.rb
-          git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }}"
+          git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }} and update URL"
           git push
 
       - name: Create Release
@@ -63,3 +69,8 @@ jobs:
           release_name: "flutter_kreasi v${{ steps.bump_version.outputs.new_version }}"
           draft: false
           prerelease: false
+
+      - name: Upload Build Artifact to Release
+        run: |
+          # Mengupload file flutter_kreasi ke release GitHub
+          gh release upload ${{ steps.bump_version.outputs.new_version }} flutter_kreasi_latest
