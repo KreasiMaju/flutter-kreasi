@@ -37,28 +37,28 @@ jobs:
 
       - name: Update Formula Version
         run: |
-          # Mengganti versi di flutter_kreasi.rb
-          sed -i "s/version \".*\"/version \"${{ steps.bump_version.outputs.new_version }}\"/" flutter_kreasi.rb
+          # Mengganti versi di Formula/flutter_kreasi.rb
+          sed -i "s/version \".*\"/version \"${{ steps.bump_version.outputs.new_version }}\"/" Formula/flutter_kreasi.rb
 
           # Update URL download dari GitHub release
           github_url="https://github.com/KreasiMaju/flutter-kreasi/releases/download/${{ steps.bump_version.outputs.new_version }}/flutter_kreasi"
-          sed -i "s|url \".*\"|url \"$github_url\"|" flutter_kreasi.rb
+          sed -i "s|url \".*\"|url \"$github_url\"|" Formula/flutter_kreasi.rb
 
           # Update SHA256 (opsional jika diinginkan hash valid file)
           curl -L "$github_url" -o flutter_kreasi_latest
           sha256=$(sha256sum flutter_kreasi_latest | awk '{ print $1 }')
-          sed -i "s/sha256 \".*\"/sha256 \"$sha256\"/" flutter_kreasi.rb
+          sed -i "s/sha256 \".*\"/sha256 \"$sha256\"/" Formula/flutter_kreasi.rb
 
       - name: Update Print Version
         run: |
-          # Mengganti versi di dalam script flutter_kreasi.rb
-          sed -i "s/puts \"Version .*/puts \"Version ${{ steps.bump_version.outputs.new_version }}\"/" flutter_kreasi.rb
+          # Mengganti versi di dalam script Formula/flutter_kreasi.rb
+          sed -i "s/puts \"Version .*/puts \"Version ${{ steps.bump_version.outputs.new_version }}\"/" Formula/flutter_kreasi.rb
 
       - name: Commit and Push Changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add flutter_kreasi.rb
+          git add Formula/flutter_kreasi.rb
           git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }} and update URL"
           git push
 
