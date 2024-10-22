@@ -1,0 +1,324 @@
+#!/usr/bin/env ruby
+
+def execute_command(command)
+  result = system(command)
+  unless result
+    puts "Error executing command: #{command}"
+    exit 1
+  end
+end
+
+def create_directory(path)
+  execute_command("mkdir -p #{path}")
+end
+
+def create_file_with_content(path, content)
+  File.open(path, 'w') { |file| file.write(content) }
+end
+
+def create_project(project_name)
+  return puts "Please enter project name!" if project_name.empty?
+
+  project_path = "./#{project_name}"
+
+  # Command untuk membuat project Flutter dan menyiapkan struktur dasar
+  create_command = <<-CMD
+    flutter create #{project_name} &&
+    cd #{project_name} &&
+    touch sonar.properties &&
+    flutter pub add get &&
+    flutter pub add dio && 
+    flutter pub add flutter_gen &&
+    flutter pub add google_fonts &&
+    dart pub global activate flutter_gen
+  CMD
+
+  # Struktur direktori
+  directories = %w[
+    assets presentation network storage services ui-components routes
+  ]
+
+  # Menyiapkan struktur file dan direktori
+  execute_command(create_command)
+  directories.each { |dir| create_directory("#{project_path}/lib/#{dir}") }
+
+  # Membuat file router dan mengganti main.dart
+  create_router_files(project_path, project_name)
+  create_presentation('Example',project_path)
+  create_style(project_path, project_name)
+end
+
+def create_style(project_path, project_name)
+  directories = %w[
+    style util
+  ]
+  directories.each { |dir| create_directory("#{project_path}/lib/ui-components/#{dir}") }
+
+  app_color = <<-appcolor
+  import 'package:flutter/material.dart';
+
+class AppColors {
+  static const primary = Color(0xFF00A3FF);
+  static const secondary = Color(0xFFFFA500);
+  static const background = Color(0xFFF5F5F5);
+  static const darkBackground = Color(0xFF121212);
+    static const textColorLight = Color(0xFF000000);
+  static const textColorDark = Color(0xFFFFFFFF);
+}
+
+  appcolor
+
+
+  dark_theme = <<-darktheme
+  import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:#{project_name}/ui-components/style/text_style.dart';
+import 'app_colors.dart';
+
+ThemeData darkTheme = ThemeData(
+  brightness: Brightness.dark,
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: AppColors.primary, // Sesuaikan dengan warna utama kamu
+    brightness: Brightness.dark,
+  ),
+  fontFamily:  GoogleFonts.manrope().fontFamily,
+  textTheme: const TextTheme(
+    displayLarge: AppTextStyles.headline1Dark,
+    bodyLarge: AppTextStyles.bodyText1Dark,
+  ),
+);
+  darktheme
+
+  light_theme = <<-lighttheme
+  import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:#{project_name}/ui-components/style/app_colors.dart';
+import 'package:#{project_name}/ui-components/style/text_style.dart';
+
+ThemeData lightTheme = ThemeData(
+  brightness: Brightness.light,
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: AppColors.primary,
+    brightness: Brightness.light,
+  ),
+  fontFamily: GoogleFonts.manrope().fontFamily,
+  textTheme: const TextTheme(
+    displayLarge: AppTextStyles.headline1Light,
+    bodyLarge: AppTextStyles.bodyText1Light,
+  ),
+);
+
+  lighttheme
+
+  text_style = <<-textstyle
+import 'package:flutter/material.dart';
+import 'package:#{project_name}/ui-components/style/app_colors.dart';
+
+class AppTextStyles {
+  static const headline1Dark = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textColorDark,
+  );
+
+  static const headline1Light = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textColorLight,
+  );
+
+  static const bodyText1Dark = TextStyle(
+    fontSize: 16,
+    color: AppColors.textColorDark,
+  );
+
+  static const bodyText1Light = TextStyle(
+    fontSize: 16,
+    color: AppColors.textColorLight,
+  );
+}
+  textstyle
+
+  extension = <<-extension
+import 'package:flutter/material.dart';
+
+extension HexColor on String {
+  Color toColor() {
+    // Hapus simbol '#' jika ada
+    final hexString = replaceAll('#', '');
+
+    // Pastikan panjang hex valid
+    if (hexString.length == 6 || hexString.length == 8) {
+      final buffer = StringBuffer();
+      if (hexString.length == 6) {
+        buffer.write('FF'); // Menambahkan alpha 255 untuk RGB
+      }
+      buffer.write(hexString);
+      return Color(int.parse(buffer.toString(), radix: 16));
+    } else {
+      throw const FormatException("Invalid HEX color format");
+    }
+  }
+}
+  extension
+
+  create_file_with_content("#{project_path}/lib/ui-components/style/app_colors.dart", app_color)
+  create_file_with_content("#{project_path}/lib/ui-components/style/dark_theme.dart", dark_theme)
+  create_file_with_content("#{project_path}/lib/ui-components/style/light_theme.dart", light_theme)
+  create_file_with_content("#{project_path}/lib/ui-components/style/text_style.dart", text_style)
+  create_file_with_content("#{project_path}/lib/ui-components/util/extension.dart", extension)
+
+end
+
+def create_router_files(project_path, project_name)
+  # Isi file router dengan jalur dinamis
+  router_content = <<-ROUTER
+    import 'package:#{project_name.downcase}/presentation/example/view/example_page.dart';
+    import 'package:get/get.dart';
+
+    class AppRoutes {
+      static final routes = [
+        GetPage(name: '/', page: () => const ExamplePage()),
+        // Tambahkan rute lain di sini
+      ];
+    }
+
+  ROUTER
+
+  # Mengganti main.dart dengan setup GetX
+  main_content = <<-MAIN
+  import 'package:#{project_name.downcase}/routes/app_routes.dart';
+  import 'package:flutter/material.dart';
+  import 'package:get/get.dart';
+
+  void main() {
+    runApp(const MyApp());
+  }
+
+  class MyApp extends StatelessWidget {
+    const MyApp({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+      return GetMaterialApp(
+        title: 'Flutter Project',
+        initialRoute: '/',
+        getPages: AppRoutes.routes,
+      );
+    }
+  }
+  MAIN
+
+  # Buat direktori route dan file router serta main.dart baru
+  create_directory("#{project_path}/lib/routes")
+  create_file_with_content("#{project_path}/lib/routes/app_routes.dart", router_content)
+  create_file_with_content("#{project_path}/lib/main.dart", main_content)
+end
+
+
+
+def create_service(service_name, project_path)
+  return puts "Please enter service name!" if service_name.empty?
+
+  service_class = <<-CLASS
+    abstract class #{service_name.capitalize}DataSource {}
+    abstract class #{service_name.capitalize}ServiceInterface {}
+    class #{service_name.capitalize}Service implements #{service_name.capitalize}DataSource, #{service_name.capitalize}ServiceInterface {}
+  CLASS
+  execute_command("cd #{project_path}/lib/services && mkdir #{service_name.downcase} && cd #{service_name.downcase}")
+  create_file_with_content("#{project_path}/lib/services/#{service_name.downcase}/#{service_name.downcase}_service.dart", service_class)
+end
+
+def create_dependency(dependency_name, project_path)
+  return puts "Please enter dependency name!" if dependency_name.empty?
+
+  dependency_class = <<-CLASS
+    abstract class #{dependency_name.capitalize}DependencySource {}
+    abstract class #{dependency_name.capitalize}DependencyInterface {}
+    class #{dependency_name.capitalize}Dependency implements #{dependency_name.capitalize}DependencySource, #{dependency_name.capitalize}DependencyDependencyInterface {}
+  CLASS
+
+  execute_command("cd #{project_path}/lib/dependencies && mkdir #{dependency_name.downcase}")
+  create_file_with_content("#{project_path}/lib/dependencies/#{dependency_name.downcase}/#{dependency_name.downcase}_dependency.dart", dependency_class)
+end
+
+def create_presentation(presentation_name, project_path)
+  return puts "Please enter presentation name!" if presentation_name.empty?
+
+  directories = %w[
+    constants controller view model service
+  ]
+
+  directories.each { |dir| create_directory("#{project_path}/lib/presentation/#{presentation_name.downcase}/#{dir}") }
+
+  controller_content = <<-CONTROLLER
+  import 'package:get/get.dart';
+
+abstract class SplashscreenRepository {}
+
+abstract class SplashscreenInterface {}
+
+class SplashscreenController extends GetxController
+    implements SplashscreenInterface, SplashscreenRepository {}
+  CONTROLLER
+
+  
+  # Buat direktori dan file untuk presentasi
+  execute_command("cd #{project_path}/lib/presentation")
+  create_file_with_content("#{project_path}/lib/presentation/#{presentation_name.downcase}/constants/#{presentation_name.downcase}_constant.dart", "class #{presentation_name.capitalize}Constant {}")
+  create_file_with_content("#{project_path}/lib/presentation/#{presentation_name.downcase}/controller/#{presentation_name.downcase}_binding.dart", "class #{presentation_name.capitalize}Binding {}")
+  create_file_with_content("#{project_path}/lib/presentation/#{presentation_name.downcase}/controller/#{presentation_name.downcase}_controller.dart", controller_content)
+  
+  # Update bagian view (page) untuk menggunakan Scaffold
+  page_content = <<-PAGE
+import 'package:flutter/material.dart';
+
+class #{presentation_name.capitalize}Page extends StatelessWidget {
+  static const routeName = '/#{presentation_name.downcase}';
+
+  const #{presentation_name.capitalize}Page({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('#{presentation_name.capitalize} Page'),
+      ),
+      body: const Center(
+        child: Text('Welcome to the #{presentation_name.capitalize} Page!'),
+      ),
+    );
+  }
+}
+  PAGE
+  create_file_with_content("#{project_path}/lib/presentation/#{presentation_name.downcase}/view/#{presentation_name.downcase}_page.dart", page_content)
+  
+  # Membuat model dan service
+  create_file_with_content("#{project_path}/lib/presentation/#{presentation_name.downcase}/model/#{presentation_name.downcase}_viewmodel.dart", "class #{presentation_name.capitalize}ViewModel {}")
+  create_file_with_content("#{project_path}/lib/presentation/#{presentation_name.downcase}/service/#{presentation_name.downcase}_service.dart", "class #{presentation_name.capitalize}Service {}")
+end
+
+# Mengambil argumen dari command line
+if ARGV.empty?
+  puts "Please provide a command."
+  exit
+end
+
+command = ARGV[0]
+sub_command = ARGV[1]
+name = ARGV[2]
+
+case command
+when "create"
+  create_project(sub_command)
+when "service"
+  create_service(name, "./") if sub_command == "create"
+when "dependency"
+  create_dependency(name, "./") if sub_command == "create"
+when "presentation"
+  create_presentation(name, "./") if sub_command == "create"
+when "version"
+  puts "Version 1.0.1"
+else
+  puts "Unknown command."
+end
