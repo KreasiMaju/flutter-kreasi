@@ -56,7 +56,7 @@ jobs:
 
       - name: Commit and Push Changes
         run: |
-          git config user.name "devry123"
+          git config user.name "devry12"
           git config user.email "devrykawiryan@gmail.com"
           git add Formula/flutter_kreasi.rb
           git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }} and update URL"
