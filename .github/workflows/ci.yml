@@ -54,13 +54,22 @@ jobs:
           # Mengganti versi di dalam script Formula/flutter_kreasi.rb
           sed -i "s/puts \"Version .*/puts \"Version ${{ steps.bump_version.outputs.new_version }}\"/" Formula/flutter_kreasi.rb
 
-      - name: Commit and Push Changes
+      - name: Configure Git
         run: |
           git config user.name "devry12"
           git config user.email "devrykawiryan@gmail.com"
+
+      - name: Commit changes
+        run: |
           git add Formula/flutter_kreasi.rb
           git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }} and update URL"
-          git push
+
+      - name: Push changes
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/KreasiMaju/flutter-kreasi.git
+          git push origin main
 
       - name: Create Release
         uses: actions/create-release@v1
