@@ -1,0 +1,65 @@
+name: Update Version on Merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0
+
+      - name: Get Current Version
+        id: current_version
+        run: |
+          # Mendapatkan versi saat ini dari file formula
+          current_version=$(grep -oP 'version "\K[^\"]+' flutter_kreasi.rb)
+          echo "Current version: $current_version"
+          echo "::set-output name=version::$current_version"
+
+      - name: Bump Version
+        id: bump_version
+        run: |
+          # Mengambil versi saat ini, lalu menambahkannya
+          version=${{ steps.current_version.outputs.version }}
+          new_version=$(echo $version | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+          echo "New version: $new_version"
+          echo "::set-output name=new_version::$new_version"
+
+      - name: Update Formula Version
+        run: |
+          # Mengganti versi di flutter_kreasi.rb
+          sed -i "s/version \".*\"/version \"${{ steps.bump_version.outputs.new_version }}\"/" flutter_kreasi.rb
+          
+          # Update SHA256
+          # (update SHA256 sesuai file baru, perlu dikembangkan sesuai kebutuhan, bisa menggunakan curl dan openssl)
+
+      - name: Update Print Version
+        run: |
+          # Mengganti versi di dalam script flutter_kreasi.rb
+          sed -i "s/puts \"Version .*/puts \"Version ${{ steps.bump_version.outputs.new_version }}\"/" flutter_kreasi.rb
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add flutter_kreasi.rb
+          git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }}"
+          git push
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.bump_version.outputs.new_version }}
+          release_name: "flutter_kreasi v${{ steps.bump_version.outputs.new_version }}"
+          draft: false
+          prerelease: false
