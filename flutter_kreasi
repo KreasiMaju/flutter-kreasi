@@ -325,7 +325,7 @@ Examples:
 end
 
 def print_version
-  puts "Version 1.0.1"
+  puts "Version 1.0.2"
 end
 
 # Mengambil argumen dari command line
